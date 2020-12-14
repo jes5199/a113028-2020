@@ -1,3 +1,5 @@
+require "prime"
+
 # A113028, from The On-Line Encyclopedia of Integer Sequences
 #
 # a(n) is the largest integer whose base n digits are all different that is divisible by each of its individual digits
@@ -12,7 +14,7 @@
 #
 # There are two rules that can be used to entirely disqualify a set of digits.
 #
-#The first is "the Ten Rule". In a given base, if a number is a multiple of 10, it will end in a zero, but
+# The first is "the Ten Rule". In a given base, if a number is a multiple of 10, it will end in a zero, but
 # our problem statement precludes zero from appearing in the answer.
 # So, in the case of base ten, any LCM(digits) will be a multiple of 10 if the digits include a 5 and any even number.
 # This is because the prime factorization of 10 is 2 and 5 - so they cannot *both* appear in the prime factorization
@@ -40,7 +42,7 @@
 # of base-minus-one.
 #
 # In theory, there are many subsets of digits that satisfy both of these rules for a given base. In practice, though, for all bases after
-# base 6, the set with the largest candidate - the actual answer to our problem - will contain a 9, and have no more than one digit removed
+# base 6, the set with the largest candidate - the actual answer to our problem - will contain a "nine", and have no more than one digit removed
 # by each of the Nine rule and the Ten rule.
 #
 # So, for base 10. Available digits are: [9 8 7 6 5 4 3 2 1], but by the Ten Rule, we should either remove [5] or [8 6 4 2]. We'll remove the 5.
@@ -49,17 +51,69 @@
 #
 # The LCM of [9 8 7 6 3 2 1] is 504, so our answer must be a multiple of 504
 
-base = 10
-digits = [9, 8, 7, 6, 3, 2, 1]
-lcm = 504
-n = 9876321 # maximum number possible with these digits
 
+def print_number(n, base)
+  print n, " "
+  if base <= 36
+    p n.to_s(base)
+  else
+    r = []
+    begin
+      r.unshift(n%base)
+      n /= base
+    end while n > 0
+    p r
+  end
+end
 
-loop do
-  p n
+base = (ARGV[0] || 10).to_i
+debug = ARGV[1]
+puts "base #{base}" if debug
+
+base_factors = Prime.prime_division(base).map{|a,b| a**b}.sort
+
+digits = (1...base).to_a.reverse
+
+# Ten Rule
+delete_for_ten_rule = digits.find_all do |d|
+  d % base_factors.last == 0
+end
+if delete_for_ten_rule.length > 0
+  puts "removing #{delete_for_ten_rule.join(",")} for the Ten Rule" if debug
+  digits -= delete_for_ten_rule
+end
+
+if base == 6
+  puts "removing 5 for the weird exception in base 6" if debug
+  digits.delete 5
+end
+
+# Nine Rule
+if digits[0] == base - 1
+  nine_remainder = digits.sum % (base-1)
+  delete_for_nine_rule = digits.find do |d|
+    d == nine_remainder
+  end
+  if delete_for_nine_rule
+    puts "removing #{delete_for_nine_rule} for the Nine Rule" if debug
+    digits.delete delete_for_nine_rule
+  end
+end
+
+lcm = digits.inject(&:lcm)
+puts "lcm is #{lcm}" if debug
+
+n = digits.reduce do |a,b|
+  a * base + b
+end
+print_number(n, base) if debug
+
+count = 0
+while n > 0
+  count+=1
   rem = n % lcm
   n -= rem # a multiple of the lcm
-  p n
+  print_number(n, base) if debug
 
   # check each digit to find the largest one that's not in our set
   digits_available = digits.dup
@@ -74,9 +128,13 @@ loop do
     end
   end
   if digits_available.length == 0
-    puts "done!"
-    p n
-    p n.to_s(base) if base <= 36
+    puts "base #{base} done in #{count} iterations!" if debug
+    print "#{base}: "
+    print_number(n, base)
     break
   end
+end
+
+if n < 0
+  puts "failed for base #{base}"
 end
