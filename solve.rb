@@ -42,8 +42,8 @@ require "prime"
 # of base-minus-one.
 #
 # In theory, there are many subsets of digits that satisfy both of these rules for a given base. In practice, though, for all bases after
-# base 6, the set with the largest candidate - the actual answer to our problem - will contain a "nine", and have no more than one digit removed
-# by each of the Nine rule and the Ten rule.
+# base 6, the set with the largest candidate - the actual answer to our problem - will contain a "nine", and will be in the "best" set of
+# digits, which is can be chosen easily by following simple rules.
 #
 # So, for base 10. Available digits are: [9 8 7 6 5 4 3 2 1], but by the Ten Rule, we should either remove [5] or [8 6 4 2]. We'll remove the 5.
 # The remaining digits [9 8 7 6 4 3 2 1] contain base-minus-one and are subject to the Nine Rule. 8+7+6+4+3+2+1 = 31. 31 % 9 = 4, so we need to either
